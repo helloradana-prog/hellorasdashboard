@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dashboard · Hellora Consultoria</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#F7F5F2;
+    --card:#FFFFFF;
+    --border:#EAE3F0;
+    --purple:#8B5FA8;
+    --purple-dark:#6D4D8A;
+    --purple-light:#EDE3F5;
+    --purple-mid:#C9AEDD;
+    --green:#6BB58A;
+    --green-light:#DFF3E5;
+    --green-dark:#3F8F63;
+    --terracotta:#B9764A;
+    --text-dark:#2C2438;
+    --text-mid:#6B5F7A;
+    --text-light:#A898B8;
+    --red:#E57373;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--text-dark);min-height:100vh;max-width:560px;margin:0 auto;}
+
+  /* ── PIN SCREEN ── */
+  .pin-screen{position:fixed;inset:0;background:var(--cream);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:32px 24px;}
+  .pin-screen.hidden{display:none;}
+  .pin-logo{font-family:'Playfair Display',serif;font-weight:700;font-size:26px;color:var(--purple-dark);margin-bottom:4px;text-align:center;}
+  .pin-sub{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:36px;text-align:center;}
+  .pin-dots{display:flex;gap:12px;margin-bottom:28px;}
+  .pin-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--border);background:#fff;transition:all .15s;}
+  .pin-dot.filled{background:var(--purple);border-color:var(--purple);}
+  .pin-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;max-width:280px;}
+  .pin-key{aspect-ratio:1;border-radius:16px;background:#fff;border:1px solid var(--border);font-size:20px;color:var(--text-dark);display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;}
+  .pin-key:active{background:var(--purple-light);}
+  .pin-key.pin-text{font-size:12px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.04em;}
+  .pin-error{color:var(--red);font-size:12px;margin-top:16px;height:16px;}
+
+  #app{display:none;padding-bottom:50px;}
+  #app.visible{display:block;}
+
+  .topbar{
+    background:#fff;border-bottom:1px solid var(--border);
+    padding:22px 20px;display:flex;align-items:flex-start;justify-content:space-between;
+    position:sticky;top:0;z-index:10;
+  }
+  .topbar h1{font-family:'Playfair Display',serif;font-weight:700;font-size:24px;color:var(--purple-dark);}
+  .topbar p{font-size:11px;color:var(--text-light);margin-top:2px;text-transform:uppercase;letter-spacing:0.1em;}
+  .refresh-btn{
+    background:var(--purple-light);border:none;border-radius:20px;padding:10px 16px;
+    font-size:13px;color:var(--purple-dark);display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap;
+  }
+  .refresh-btn:active{background:var(--purple-mid);}
+  .refresh-icon{display:inline-block;}
+  .refresh-btn.spinning .refresh-icon{animation:spin .8s linear infinite;}
+  @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+  .status-banner{
+    margin:16px 20px 0;background:var(--green-light);color:var(--green-dark);
+    border-radius:12px;padding:12px 16px;font-size:13px;font-weight:500;
+  }
+
+  .summary-row{display:flex;gap:12px;padding:16px 20px;}
+  .summary-card{flex:1;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 8px;text-align:center;}
+  .summary-num{font-family:'Playfair Display';font-weight:700;font-size:26px;}
+  .summary-num.terracotta{color:var(--terracotta);}
+  .summary-num.purple{color:var(--purple);}
+  .summary-label{font-size:11px;color:var(--text-mid);margin-top:4px;}
+
+  .section-label{padding:4px 20px 12px;font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;}
+
+  .students-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:0 20px 6px;}
+  .student-chip{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:14px 6px;text-align:center;cursor:pointer;transition:all .15s;
+  }
+  .student-chip .chip-name{font-family:'Playfair Display';font-weight:600;font-size:15px;color:var(--text-dark);}
+  .student-chip .chip-sub{font-size:11px;color:var(--text-light);margin-top:3px;}
+  .student-chip.has-data{background:var(--purple-light);}
+  .student-chip.has-data .chip-name{color:var(--purple-dark);}
+  .student-chip.has-data .chip-sub{color:var(--purple);}
+  .student-chip.selected{background:var(--purple-dark);}
+  .student-chip.selected .chip-name{color:#fff;}
+  .student-chip.selected .chip-sub{color:var(--purple-mid);}
+
+  .progress-section{padding:24px 20px 0;}
+  .progress-title{font-size:11px;color:var(--text-light);text-transform:uppercase;letter-spacing:0.1em;font-weight:600;margin-bottom:12px;}
+
+  .detail-banner{
+    background:linear-gradient(135deg,var(--purple-light),var(--green-light));
+    border-radius:16px;padding:20px 20px 22px;margin:0 20px 16px;
+  }
+  .detail-name{font-family:'Playfair Display';font-weight:700;font-size:28px;color:var(--purple-dark);}
+  .detail-id{font-size:13px;color:var(--text-mid);margin-top:2px;}
+  .detail-updated{font-size:12px;color:var(--text-light);margin-top:10px;}
+
+  .week-scroll{display:flex;gap:10px;overflow-x:auto;padding:0 20px 18px;}
+  .week-scroll::-webkit-scrollbar{display:none;}
+  .week-pill{
+    flex-shrink:0;width:44px;height:44px;border-radius:50%;background:var(--card);border:1px solid var(--border);
+    display:flex;align-items:center;justify-content:center;font-family:'Playfair Display';font-weight:600;font-size:15px;
+    color:var(--text-mid);cursor:pointer;
+  }
+  .week-pill.active{background:var(--purple);color:#fff;border-color:transparent;}
+  .week-pill.has-eval{border-color:var(--green);}
+
+  .eval-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin:0 20px 20px;}
+  .eval-title{font-family:'Playfair Display';font-weight:700;font-size:18px;color:var(--purple-dark);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+  .eval-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;gap:14px;}
+  .eval-cat{font-size:14px;color:var(--text-dark);flex-shrink:0;width:120px;}
+  .eval-bar-track{flex:1;height:8px;border-radius:6px;background:var(--cream);overflow:hidden;}
+  .eval-bar-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--purple),var(--green));}
+  .eval-val{font-family:'Playfair Display';font-weight:600;font-size:15px;color:var(--purple-dark);width:20px;text-align:right;}
+
+  .eval-quote{
+    margin-top:16px;background:var(--purple-light);border-radius:12px;padding:14px 16px;
+    font-family:'Playfair Display';font-style:italic;font-size:14px;color:var(--purple-dark);
+  }
+
+  .workout-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;margin:0 20px 20px;}
+  .workout-title{font-family:'Playfair Display';font-weight:700;font-size:18px;color:var(--purple-dark);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+  .completion-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);}
+  .completion-row:last-child{border-bottom:none;}
+  .completion-week{font-size:13px;color:var(--text-dark);}
+  .completion-frac{font-family:'Playfair Display';font-weight:600;font-size:14px;color:var(--green-dark);}
+
+  .load-ex-row{padding:10px 0;border-bottom:1px solid var(--border);}
+  .load-ex-row:last-child{border-bottom:none;}
+  .load-ex-name{font-size:13.5px;color:var(--text-dark);margin-bottom:6px;}
+  .load-history{display:flex;gap:8px;flex-wrap:wrap;}
+  .load-chip{background:var(--cream);border-radius:8px;padding:4px 10px;font-size:11.5px;color:var(--purple-dark);white-space:nowrap;}
+  .load-chip b{font-family:'Playfair Display';}
+  .load-chip.grew{background:var(--green-light);color:var(--green-dark);}
+
+  .empty-note{padding:30px 20px;text-align:center;color:var(--text-light);font-size:13px;}
+  .loader{text-align:center;color:var(--text-light);font-size:12px;padding:30px 20px;}
+</style>
+</head>
+<body>
+
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-logo">Hellora</div>
+  <div class="pin-sub">Dashboard · Professor</div>
+  <div class="pin-dots" id="pin-dots">
+    <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+  </div>
+  <div class="pin-grid" id="pin-grid"></div>
+  <div class="pin-error" id="pin-error"></div>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Hellora Consultoria</p>
+    </div>
+    <div class="refresh-btn" id="refresh-btn" onclick="loadAllStudents()">
+      <span class="refresh-icon">↻</span> Atualizar
+    </div>
+  </div>
+
+  <div class="status-banner" id="status-banner" style="display:none;"></div>
+
+  <div class="summary-row" id="summary-row">
+    <div class="summary-card"><div class="summary-num terracotta">0</div><div class="summary-label">Alunos</div></div>
+    <div class="summary-card"><div class="summary-num purple">0</div><div class="summary-label">Com dados</div></div>
+    <div class="summary-card"><div class="summary-num purple">0</div><div class="summary-label">Avaliações</div></div>
+  </div>
+
+  <div class="section-label">Todos os Alunos</div>
+  <div class="students-grid" id="students-grid">
+    <div class="loader">⏳ Carregando...</div>
+  </div>
+
+  <div class="progress-section" id="progress-section" style="display:none;">
+    <div class="progress-title" id="progress-title">Progresso</div>
+    <div class="detail-banner" id="detail-banner"></div>
+    <div class="week-scroll" id="week-scroll"></div>
+    <div id="eval-container"></div>
+    <div id="workout-container"></div>
+  </div>
+</div>
+
+<script>
+var PIN = '210115';
+var FIREBASE_URL = 'https://helloradana-consultoria-default-rtdb.firebaseio.com';
+
+// ── Lista completa de alunos ──────────────────────────────────────────────
+var ALUNOS = [
+  {nome:'Diego', id:'diego-abadia'},
+  {nome:'Jessica', id:'jessica-silva'},
+  {nome:'Stephanie', id:'stephanie'},
+  {nome:'Júlia', id:'julia'},
+  {nome:'Beatriz', id:'beatriz'},
+  {nome:'Jamyle', id:'jamyle'},
+  {nome:'Mayara', id:'mayara'},
+  {nome:'Arlen', id:'arlen'},
+  {nome:'Zion', id:'zion'},
+  {nome:'Laura', id:'laura'},
+  {nome:'Sabrina', id:'sabrina-macedo'},
+  {nome:'Rafaela', id:'rafaela'},
+  {nome:'Leonardo', id:'leonardo'},
+  {nome:'Bianca', id:'bianca'},
+  {nome:'Eduardo', id:'eduardo'},
+  {nome:'Letícia', id:'leticia'},
+  {nome:'Luiza', id:'luiza'},
+  {nome:'Bruna', id:'bruna'}
+];
+
+var EVAL_CATS = [
+  {label:'Frequência', variants:['freq','frequência','frequncia','Frequência']},
+  {label:'Humor', variants:['humor','Humor']},
+  {label:'Energia', variants:['energia','Energia']},
+  {label:'Dificuldade', variants:['dific','dificuldade','Dificuldade']},
+  {label:'Dor / Desconforto', variants:['dor','dor___desconforto','dor_ou_desconforto','dor_desconforto','Dor ou desconforto','Dor / Desconforto']},
+  {label:'Sono', variants:['sono','Sono']},
+  {label:'Alimentação', variants:['alim','alimentação','alimentao','Alimentação']}
+];
+
+var studentsData = [];
+var selectedIndex = -1;
+var selectedWeek = 1;
+
+// ── PIN LOGIC ──────────────────────────────────────────────────────────────
+var typed = '';
+
+function buildPinGrid() {
+  var grid = document.getElementById('pin-grid');
+  grid.innerHTML = '';
+  var rows = [
+    ['1','2','3'],
+    ['4','5','6'],
+    ['7','8','9'],
+    ['Limpar','0','⌫']
+  ];
+  for (var r = 0; r < rows.length; r++) {
+    for (var c = 0; c < rows[r].length; c++) {
+      var k = rows[r][c];
+      var el = document.createElement('div');
+      el.className = 'pin-key' + (k === 'Limpar' ? ' pin-text' : '');
+      el.textContent = k;
+      el.onclick = (function(kk) { return function() { handleKey(kk); }; })(k);
+      grid.appendChild(el);
+    }
+  }
+}
+
+function handleKey(k) {
+  if (k === '⌫') { typed = typed.slice(0, -1); }
+  else if (k === 'Limpar') { typed = ''; }
+  else if (typed.length < 6) { typed += k; }
+  updateDots();
+  if (typed.length === 6) checkPin();
+}
+
+function checkPin() {
+  if (typed === PIN) {
+    document.getElementById('pin-screen').classList.add('hidden');
+    document.getElementById('app').classList.add('visible');
+    loadAllStudents();
+  } else {
+    document.getElementById('pin-error').textContent = 'PIN incorreto';
+    setTimeout(function() {
+      typed = '';
+      updateDots();
+      document.getElementById('pin-error').textContent = '';
+    }, 700);
+  }
+}
+
+function updateDots() {
+  var dots = document.querySelectorAll('.pin-dot');
+  for (var i = 0; i < dots.length; i++) {
+    dots[i].classList.toggle('filled', i < typed.length);
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────────────────────
+function formatShortDate(iso) {
+  if (!iso) return null;
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  var dd = String(d.getDate()).padStart(2, '0');
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  return dd + '/' + mm;
+}
+
+function formatFullDate(iso) {
+  if (!iso) return null;
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return null;
+  var dd = String(d.getDate()).padStart(2, '0');
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var yyyy = d.getFullYear();
+  var hh = String(d.getHours()).padStart(2, '0');
+  var min = String(d.getMinutes()).padStart(2, '0');
+  var ss = String(d.getSeconds()).padStart(2, '0');
+  return dd + '/' + mm + '/' + yyyy + ', ' + hh + ':' + min + ':' + ss;
+}
+
+function nowTimeStr() {
+  var d = new Date();
+  var hh = String(d.getHours()).padStart(2, '0');
+  var min = String(d.getMinutes()).padStart(2, '0');
+  var ss = String(d.getSeconds()).padStart(2, '0');
+  return hh + ':' + min + ':' + ss;
+}
+
+function getCatValue(weekObj, variants) {
+  for (var i = 0; i < variants.length; i++) {
+    var v = weekObj[variants[i]];
+    if (typeof v === 'number') return v;
+  }
+  return undefined;
+}
+
+// Merge legacy schema (flat "eval-wN" keys with abbreviated/accented category
+// names + "obs") and the newer schema (evalNotas[N][categoria] + evalObs[N])
+// into one canonical map: { weekNum: { cats: {label: value}, obs: string } }
+function normalizeEvalWeeks(data) {
+  var weeks = {};
+  if (!data) return weeks;
+
+  // Legacy schema: keys like "eval-w1", "eval-w2", ... at the root of state
+  for (var key in data) {
+    var m = /^eval-w(\d+)$/.exec(key);
+    if (m && data[key] && typeof data[key] === 'object') {
+      var wNum = parseInt(m[1], 10);
+      if (!weeks[wNum]) weeks[wNum] = {cats: {}, obs: ''};
+      for (var c = 0; c < EVAL_CATS.length; c++) {
+        var val = getCatValue(data[key], EVAL_CATS[c].variants);
+        if (val !== undefined) weeks[wNum].cats[EVAL_CATS[c].label] = val;
+      }
+      if (data[key].obs) weeks[wNum].obs = data[key].obs;
+    }
+  }
+
+  // Newer schema: evalNotas[weekNum][categoria] + evalObs[weekNum]
+  if (data.evalNotas) {
+    for (var wk in data.evalNotas) {
+      var wNum2 = parseInt(wk, 10);
+      if (!weeks[wNum2]) weeks[wNum2] = {cats: {}, obs: ''};
+      var notasObj = data.evalNotas[wk] || {};
+      for (var c2 = 0; c2 < EVAL_CATS.length; c2++) {
+        if (weeks[wNum2].cats[EVAL_CATS[c2].label] !== undefined) continue;
+        var val2 = getCatValue(notasObj, EVAL_CATS[c2].variants);
+        if (val2 !== undefined) weeks[wNum2].cats[EVAL_CATS[c2].label] = val2;
+      }
+    }
+  }
+  if (data.evalObs) {
+    for (var wk2 in data.evalObs) {
+      var wNum3 = parseInt(wk2, 10);
+      if (data.evalObs[wk2] && (!weeks[wNum3] || !weeks[wNum3].obs)) {
+        if (!weeks[wNum3]) weeks[wNum3] = {cats: {}, obs: ''};
+        weeks[wNum3].obs = data.evalObs[wk2];
+      }
+    }
+  }
+
+  return weeks;
+}
+
+// Common abbreviation → readable word map, used to prettify exercise slugs
+// like "cad-ext" or "pux-barra" into "Cadeira Extensora" / "Puxada Barra".
+var WORD_MAP = {
+  'cad':'Cadeira', 'ext':'Extensora', 'flex':'Flexora', 'adutora':'Adutora',
+  'agach':'Agachamento', 'sumo':'Sumo', 'legpress':'Leg Press', 'leg45':'Leg Press 45',
+  'pant':'Panturrilha', 'pux':'Puxada', 'barra':'Barra', 'tri':'Triângulo',
+  'remada':'Remada', 'rem':'Remada', 'maq':'Máquina', 'u':'Unilateral',
+  'facepull':'Facepull', 'martelo':'Martelo', 'ros':'Rosca', 'rosca':'Rosca',
+  'b':'B', 'stiff':'Stiff', 'coice':'Coice', 'elev':'Elevação', 'p':'Pélvica',
+  'post':'Posterior', 'iso':'Isolado', 'mob':'Mobilidade', 'a':'A', 'c':'C', 'd':'D',
+  'cardio':'Cardio', 'desenv':'Desenvolvimento', 'arc':'Arco', 'fr':'Frontal',
+  'lat':'Lateral', 'peekdeek':'Peekdeek', 'supino':'Supino', 'cord':'Corda',
+  'afundo':'Afundo', 'h':'Halteres', 'bulgaro':'Búlgaro', 'pallof':'Pallof Press',
+  'prancha':'Prancha', 'cruc':'Crucifixo', 'inv':'Inverso', 'fly':'Fly', 'inc':'Inclinado',
+  'flexao':'Flexão', 'paralela':'Paralelas', 'pulley':'Pulley', 'pulldown':'Pulldown',
+  'bayesian':'Bayesian Curl', 'franc':'Francês'
+};
+
+function prettifyExerciseId(slug) {
+  var parts = slug.split('-');
+  var words = parts.map(function(p) {
+    var lower = p.toLowerCase();
+    if (WORD_MAP[lower]) return WORD_MAP[lower];
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  });
+  return words.join(' ');
+}
+
+// Parses the legacy flat workout schema: keys like "w1-A-cad-ext" holding
+// {done: bool, load?: number} directly on the state root.
+// Returns:
+//   weeklyCompletion: { weekNum: { done: n, total: n } }
+//   exerciseProgress: { exerciseSlug: [ {week, load, treino} ] }  (only entries with a numeric load)
+function parseWorkoutData(data) {
+  var weeklyCompletion = {};
+  var exerciseProgress = {};
+  if (!data) return {weeklyCompletion: weeklyCompletion, exerciseProgress: exerciseProgress};
+
+  for (var key in data) {
+    var m = /^w(\d+)-([A-Za-z]+)-(.+)$/.exec(key);
+    if (!m) continue;
+    var week = parseInt(m[1], 10);
+    var treino = m[2];
+    var slug = m[3];
+    var entry = data[key];
+    if (!entry || typeof entry !== 'object') continue;
+
+    if (!weeklyCompletion[week]) weeklyCompletion[week] = {done: 0, total: 0};
+    weeklyCompletion[week].total++;
+    if (entry.done) weeklyCompletion[week].done++;
+
+    if (typeof entry.load === 'number') {
+      if (!exerciseProgress[slug]) exerciseProgress[slug] = [];
+      exerciseProgress[slug].push({week: week, load: entry.load, treino: treino});
+    }
+  }
+
+  for (var ex in exerciseProgress) {
+    exerciseProgress[ex].sort(function(a, b) { return a.week - b.week; });
+  }
+
+  return {weeklyCompletion: weeklyCompletion, exerciseProgress: exerciseProgress};
+}
+
+function fetchStudent(aluno) {
+  return fetch(FIREBASE_URL + '/alunos/' + aluno.id + '/state.json')
+    .then(function(res) {
+      if (!res.ok) return {aluno: aluno, data: null};
+      return res.json().then(function(data) { return {aluno: aluno, data: data}; });
+    })
+    .catch(function() { return {aluno: aluno, data: null}; });
+}
+
+// ── LOAD & RENDER ────────────────────────────────────────────────────────
+function loadAllStudents() {
+  var refreshBtn = document.getElementById('refresh-btn');
+  refreshBtn.classList.add('spinning');
+
+  var grid = document.getElementById('students-grid');
+  grid.innerHTML = '<div class="loader">⏳ Carregando...</div>';
+
+  var promises = [];
+  for (var i = 0; i < ALUNOS.length; i++) {
+    promises.push(fetchStudent(ALUNOS[i]));
+  }
+
+  Promise.all(promises).then(function(results) {
+    studentsData = results;
+    refreshBtn.classList.remove('spinning');
+
+    var withDataCount = 0;
+    var totalEvalWeeks = 0;
+    for (var i = 0; i < results.length; i++) {
+      var hasRealData = !!(results[i].data && !results[i].data._placeholder);
+      if (hasRealData) {
+        withDataCount++;
+        totalEvalWeeks += Object.keys(normalizeEvalWeeks(results[i].data)).length;
+      }
+    }
+
+    var banner = document.getElementById('status-banner');
+    banner.style.display = 'block';
+    banner.textContent = '✅ ' + withDataCount + ' aluno(s) com dados · ' + nowTimeStr();
+
+    var summary = document.getElementById('summary-row');
+    summary.innerHTML =
+      '<div class="summary-card"><div class="summary-num terracotta">' + ALUNOS.length + '</div><div class="summary-label">Alunos</div></div>' +
+      '<div class="summary-card"><div class="summary-num purple">' + withDataCount + '</div><div class="summary-label">Com dados</div></div>' +
+      '<div class="summary-card"><div class="summary-num purple">' + totalEvalWeeks + '</div><div class="summary-label">Avaliações</div></div>';
+
+    if (selectedIndex === -1) {
+      for (var j = 0; j < results.length; j++) {
+        if (results[j].data && !results[j].data._placeholder) { selectedIndex = j; break; }
+      }
+    }
+
+    renderStudentsGrid();
+    renderProgress();
+  }).catch(function() {
+    grid.innerHTML = '<div class="loader">Erro ao carregar. Toque em Atualizar para tentar novamente.</div>';
+    refreshBtn.classList.remove('spinning');
+  });
+}
+
+function renderStudentsGrid() {
+  var grid = document.getElementById('students-grid');
+  grid.innerHTML = '';
+  for (var i = 0; i < studentsData.length; i++) {
+    var r = studentsData[i];
+    var hasRealData = !!(r.data && !r.data._placeholder);
+    var chip = document.createElement('div');
+    chip.className = 'student-chip' + (hasRealData ? ' has-data' : '') + (i === selectedIndex ? ' selected' : '');
+    var sub = hasRealData ? (formatShortDate(r.data._updated) || 'com dados') : 'sem dados';
+    chip.innerHTML = '<div class="chip-name">' + r.aluno.nome + '</div><div class="chip-sub">' + sub + '</div>';
+    chip.onclick = (function(idx) { return function() { selectedIndex = idx; selectedWeek = 1; renderStudentsGrid(); renderProgress(); }; })(i);
+    grid.appendChild(chip);
+  }
+}
+
+function renderProgress() {
+  var section = document.getElementById('progress-section');
+  if (selectedIndex === -1 || !studentsData[selectedIndex]) {
+    section.style.display = 'none';
+    return;
+  }
+
+  var r = studentsData[selectedIndex];
+  var hasRealData = !!(r.data && !r.data._placeholder);
+
+  section.style.display = 'block';
+  document.getElementById('progress-title').textContent = r.aluno.nome + ' · Progresso';
+
+  var banner = document.getElementById('detail-banner');
+  var updatedStr = hasRealData ? formatFullDate(r.data._updated) : null;
+  banner.innerHTML =
+    '<div class="detail-name">' + r.aluno.nome + '</div>' +
+    '<div class="detail-id">' + r.aluno.id + '</div>' +
+    (updatedStr ? '<div class="detail-updated">Última atualização: ' + updatedStr + '</div>' : '<div class="detail-updated">Ainda sem dados registrados.</div>');
+
+  var weekScroll = document.getElementById('week-scroll');
+  var evalContainer = document.getElementById('eval-container');
+
+  if (!hasRealData) {
+    weekScroll.innerHTML = '';
+    evalContainer.innerHTML = '<div class="empty-note">Este aluno ainda não tem avaliações registradas.</div>';
+    document.getElementById('workout-container').innerHTML = '';
+    return;
+  }
+
+  var evalWeeks = normalizeEvalWeeks(r.data);
+  var workout = parseWorkoutData(r.data);
+  var evalWeekKeys = Object.keys(evalWeeks).map(function(k) { return parseInt(k, 10); });
+  var workoutWeekKeys = Object.keys(workout.weeklyCompletion).map(function(k) { return parseInt(k, 10); });
+  var allWeekKeys = evalWeekKeys.concat(workoutWeekKeys);
+  var maxWeek = allWeekKeys.length > 0 ? Math.max.apply(null, allWeekKeys) : 1;
+  var totalWeeks = Math.max(maxWeek, 13);
+
+  weekScroll.innerHTML = '';
+  for (var w = 1; w <= totalWeeks; w++) {
+    var pill = document.createElement('div');
+    var hasEval = evalWeeks[w] && Object.keys(evalWeeks[w].cats).length > 0;
+    pill.className = 'week-pill' + (w === selectedWeek ? ' active' : '') + (hasEval && w !== selectedWeek ? ' has-eval' : '');
+    pill.textContent = w;
+    pill.onclick = (function(ww) { return function() { selectedWeek = ww; renderProgress(); }; })(w);
+    weekScroll.appendChild(pill);
+  }
+
+  var weekData = evalWeeks[selectedWeek];
+  var card = document.createElement('div');
+  card.className = 'eval-card';
+
+  if (!weekData || Object.keys(weekData.cats).length === 0) {
+    card.innerHTML = '<div class="eval-title">📊 Avaliação — Semana ' + selectedWeek + '</div><div class="empty-note" style="padding:10px 0;">Sem avaliação registrada nesta semana.</div>';
+  } else {
+    var html = '<div class="eval-title">📊 Avaliação — Semana ' + selectedWeek + '</div>';
+    for (var c3 = 0; c3 < EVAL_CATS.length; c3++) {
+      var label = EVAL_CATS[c3].label;
+      var val = weekData.cats[label];
+      if (val === undefined) continue;
+      var pct = (val / 5) * 100;
+      html += '<div class="eval-row">';
+      html += '<div class="eval-cat">' + label + '</div>';
+      html += '<div class="eval-bar-track"><div class="eval-bar-fill" style="width:' + pct + '%;"></div></div>';
+      html += '<div class="eval-val">' + val + '</div>';
+      html += '</div>';
+    }
+    if (weekData.obs) {
+      html += '<div class="eval-quote">"' + weekData.obs + '"</div>';
+    }
+    card.innerHTML = html;
+  }
+
+  evalContainer.innerHTML = '';
+  evalContainer.appendChild(card);
+
+  renderWorkoutProgress(workout);
+}
+
+function renderWorkoutProgress(workout) {
+  var container = document.getElementById('workout-container');
+  container.innerHTML = '';
+
+  var weekNums = Object.keys(workout.weeklyCompletion).map(function(k) { return parseInt(k, 10); }).sort(function(a, b) { return a - b; });
+  var exerciseSlugs = Object.keys(workout.exerciseProgress);
+
+  if (weekNums.length === 0 && exerciseSlugs.length === 0) {
+    var emptyCard = document.createElement('div');
+    emptyCard.className = 'workout-card';
+    emptyCard.innerHTML = '<div class="workout-title">🏋️ Evolução de Treino</div><div class="empty-note" style="padding:10px 0;">Nenhum treino registrado ainda.</div>';
+    container.appendChild(emptyCard);
+    return;
+  }
+
+  // ── Conclusão de treino por semana ──
+  if (weekNums.length > 0) {
+    var completionCard = document.createElement('div');
+    completionCard.className = 'workout-card';
+    var chtml = '<div class="workout-title">🏋️ Treinos Concluídos</div>';
+    for (var i = 0; i < weekNums.length; i++) {
+      var wk = weekNums[i];
+      var c = workout.weeklyCompletion[wk];
+      chtml += '<div class="completion-row"><span class="completion-week">Semana ' + wk + '</span><span class="completion-frac">' + c.done + '/' + c.total + '</span></div>';
+    }
+    completionCard.innerHTML = chtml;
+    container.appendChild(completionCard);
+  }
+
+  // ── Progressão de carga por exercício ──
+  if (exerciseSlugs.length > 0) {
+    var loadCard = document.createElement('div');
+    loadCard.className = 'workout-card';
+    var lhtml = '<div class="workout-title">📈 Progressão de Carga</div>';
+    for (var s = 0; s < exerciseSlugs.length; s++) {
+      var slug = exerciseSlugs[s];
+      var history = workout.exerciseProgress[slug];
+      var name = prettifyExerciseId(slug);
+      lhtml += '<div class="load-ex-row"><div class="load-ex-name">' + name + '</div><div class="load-history">';
+      for (var h = 0; h < history.length; h++) {
+        var grew = h > 0 && history[h].load > history[h - 1].load;
+        lhtml += '<div class="load-chip' + (grew ? ' grew' : '') + '">S' + history[h].week + ': <b>' + history[h].load + 'kg</b></div>';
+      }
+      lhtml += '</div></div>';
+    }
+    loadCard.innerHTML = lhtml;
+    container.appendChild(loadCard);
+  }
+}
+
+buildPinGrid();
+</script>
+</body>
+</html>
